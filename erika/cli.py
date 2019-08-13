@@ -14,6 +14,7 @@ from erika.erika import Erika
 from erika.erika_image_renderer import *
 from erika.erika_mock import *
 
+
 DRY_RUN_WIDTH = 60
 DRY_RUN_HEIGHT = 40
 
@@ -30,7 +31,9 @@ def create_argument_parser():
 def add_render_demo_parser(command_parser):
     demo_argument_parser = command_parser.add_parser('demo', help='Do a simple demo')
     demo_argument_parser.set_defaults(func=print_demo)
+    add_stdin_tty_parser(command_parser)
     add_basic_erika_params(demo_argument_parser)
+    
 
 
 def add_basic_erika_params(argument_parser):
@@ -44,6 +47,55 @@ def add_basic_erika_params(argument_parser):
 def print_demo(args):
     erika = get_erika_for_given_args(args)
     erika.demo()
+
+
+
+def add_stdin_tty_parser(command_parser):
+    demo_argument_parser = command_parser.add_parser('stdin_tty', help='act as an output-only terminal from stdin')
+    demo_argument_parser.set_defaults(func=print_stdin_tty)
+    add_basic_erika_params(demo_argument_parser)
+    
+def print_stdin_tty(args):
+    erika = get_erika_for_given_args(args)
+    queue = read_lines_from_stdin_non_blocking2()
+    while True:
+        line = queue.get()
+        erika.print_ascii(line)
+        c=""
+        while c!="x":
+            c=erika.read()
+            print("read from erika:", c)
+        erika.crlf()
+    
+
+
+def read_lines_from_stdin_non_blocking2():
+    lines = []
+
+    queue_to_pass_lines_through = Queue(maxsize=2)
+    worker_process = Process(target=function_for_reading_lines_from_stdin_process2,
+                             args=(queue_to_pass_lines_through, sys.stdin.fileno()))
+    worker_process.start()
+
+    return queue_to_pass_lines_through
+
+
+import sys
+
+def function_for_reading_lines_from_stdin_process2(queue_to_pass_lines_through, input_stream_fileno):
+    # stdin is closed for new processes :/
+    # https://docs.python.org/3.5/library/multiprocessing.html#all-start-methods
+    # Note to self: portable :)
+    # https://docs.python.org/3/library/os.html#os.fdopen
+    input_stream = os.fdopen(input_stream_fileno)
+    while True:
+        line=""
+        c=""
+        #print("reading...")
+        line = input_stream.readline().rstrip("\n")
+        print("read: ", repr(line))
+        queue_to_pass_lines_through.put(line) 
+    
 
 
 # TODO support using piped input https://docs.python.org/3/library/fileinput.html
@@ -142,7 +194,6 @@ def function_for_reading_lines_from_stdin_process(queue_to_pass_lines_through, i
     # Note to self: portable :)
     # https://docs.python.org/3/library/os.html#os.fdopen
     input_stream = os.fdopen(input_stream_fileno)
-
     lines = input_stream.readlines()
     queue_to_pass_lines_through.put(lines)
 

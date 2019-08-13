@@ -39,6 +39,7 @@ class Erika:
         Returns: ASCII encoded character
         """
         key_id = self.connection.read()
+        print(key_id.hex().upper())
         return self.ddr_ascii.try_decode(key_id.hex().upper())
 
     def print_ascii(self, text):
