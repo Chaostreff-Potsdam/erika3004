@@ -8,6 +8,7 @@ This way, rendering algorithms can be tested.
 # y ||
 #   ||
 #   \/
+import curses
 import sys
 from time import sleep
 
@@ -31,6 +32,55 @@ ERIKA_PAGE_HEIGHT_MICROSTEPS = ERIKA_PAGE_HEIGHT_CHARACTERS * MICROSTEPS_PER_CHA
 
 class AbstractErikaMock(AbstractErika):
 
+    # TODO are all these methods used?
+    # To keep things testable: If the methods make sense for the AbstractErikaMock implementations,
+    # add useful test behavior so Erika and AbstractErikaMock are always close!
+
+    def _decode_character(self, char):
+        pass
+
+    def _cursor_next_line(self, n=1):
+        pass
+
+    def _cursor_previous_line(self, n=1):
+        pass
+
+    def _cursor_horizontal_absolute(self, n=1):
+        pass
+
+    def _cursor_position(self, n=1, m=1):
+        pass
+
+    def _erase_in_display(self, n=0):
+        pass
+
+    def _erase_in_line(self, n=0):
+        pass
+
+    def _scroll_up(self, n=1):
+        pass
+
+    def _scroll_down(self, n=1):
+        pass
+
+    def _select_graphic_rendition(self, *n):
+        pass
+
+    def _aux_port_on(self):
+        pass
+
+    def _aux_port_off(self):
+        pass
+
+    def _device_status_report(self):
+        pass
+
+    def _save_cursor_position(self):
+        pass
+
+    def _restore_cursor_position(self):
+        pass
+
     def __enter__(self):
         return self
 
@@ -50,21 +100,43 @@ class AbstractErikaMock(AbstractErika):
     def _advance_paper(self):
         raise Exception('User is not supposed to call this function directly')
 
-    def _write_byte_delay(self, data, delay=0.5):
+    def _write_byte(self, data, delay=0.5):
         raise Exception('User is not supposed to call this function directly')
 
     def set_keyboard_echo(self, value):
         raise Exception('Not supported yet')
 
+    def decode(self, value):
+        raise Exception('Not supported yet')
 
+
+# to get exception-safe behavior, make sure __exit__ is always called (by using with-statements)
 class CharacterBasedErikaMock(AbstractErikaMock):
 
     def __init__(self,
                  width=ERIKA_PAGE_WIDTH_CHARACTERS_SOFT_LIMIT_AT_12_CHARS_PER_INCH,
                  height=ERIKA_PAGE_HEIGHT_CHARACTERS,
                  exception_if_overprinted=True,
-                 output_after_each_step=False,
-                 delay_after_each_step=0):
+                 delay_after_each_step=0,
+                 inside_unit_test=False):
+        self.inside_unit_test = inside_unit_test
+
+        # if your program fails here, add environment variable TERM=linux
+        self.stdscr = curses.initscr()
+
+        self._resize_if_more_space_is_needed(height, width)
+
+        # no enter key needed to post input;
+        # can be disabled, it caused error when running print-out-only tests
+        if not self.inside_unit_test:
+            curses.cbreak()
+        curses.nl()
+
+        # escape sequences (numpad, function keys, ...) will be interpreted
+        self.stdscr.keypad(True)
+
+        self.stdscr.move(0, 0)
+
         self.width = width
         self.height = height
         self.canvas = []
@@ -76,8 +148,38 @@ class CharacterBasedErikaMock(AbstractErikaMock):
         self.canvas_x = 0
         self.canvas_y = 0
         self.exception_if_overprinted = exception_if_overprinted
-        self.output_after_each_step = output_after_each_step
         self.delay_after_each_step = delay_after_each_step
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        # caused error when running tests
+        if not self.inside_unit_test:
+            curses.nocbreak()
+        self.stdscr.keypad(False)
+        curses.echo()
+        # caused error when running tests
+        if not self.inside_unit_test:
+            curses.endwin()
+
+    def _resize_if_more_space_is_needed(self, height, width):
+        window_max_y, window_max_x = self.stdscr.getmaxyx()
+        if window_max_x <= (width + 2) or window_max_y <= (height + 2):
+            self.stdscr.resize(max(window_max_y, height + 2), max(window_max_x, width + 2))
+
+    def set_keyboard_echo(self, value):
+        if value:
+            curses.echo()
+        else:
+            curses.noecho()
+
+    def read(self):
+        c = chr(self.stdscr.getch())
+        return c
+
+    def wait_for_user_if_simulated(self):
+        self.stdscr.getch()
 
     # microstep-based
 
@@ -99,16 +201,40 @@ class CharacterBasedErikaMock(AbstractErikaMock):
     # character-based
 
     def move_up(self):
+        if not self.inside_unit_test:
+            self._cursor_up()
         self.canvas_y -= 1
 
     def move_down(self):
+        if not self.inside_unit_test:
+            self._cursor_down()
         self.canvas_y += 1
 
     def move_left(self):
+        if not self.inside_unit_test:
+            self._cursor_back()
         self.canvas_x -= 1
 
     def move_right(self):
+        if not self.inside_unit_test:
+            self._cursor_forward()
         self.canvas_x += 1
+
+    def _cursor_up(self, n=1):
+        y, x = self.stdscr.getyx()
+        self.stdscr.move(y - n, x)
+
+    def _cursor_down(self, n=1):
+        y, x = self.stdscr.getyx()
+        self.stdscr.move(y + n, x)
+
+    def _cursor_forward(self, n=1):
+        y, x = self.stdscr.getyx()
+        self.stdscr.move(y, x + n)
+
+    def _cursor_back(self, n=1):
+        y, x = self.stdscr.getyx()
+        self.stdscr.move(y, x - n)
 
     def demo(self):
         for i in range(0, 10):
@@ -120,6 +246,8 @@ class CharacterBasedErikaMock(AbstractErikaMock):
     def crlf(self):
         self.canvas_x = 0
         self.canvas_y += 1
+        y, x = self.stdscr.getyx()
+        self.stdscr.move(y + 1, 0)
 
     def print_ascii(self, text):
         for c in text:
@@ -138,10 +266,10 @@ class CharacterBasedErikaMock(AbstractErikaMock):
                 sys.exit(1)
 
             self.canvas_x += 1
-            if self.output_after_each_step:
-                self._test_debug_helper_print_canvas()
-                if self.delay_after_each_step > 0:
-                    sleep(self.delay_after_each_step)
+        self.stdscr.addstr(text)
+        if self.delay_after_each_step > 0:
+            sleep(self.delay_after_each_step)
+        self.stdscr.refresh()
 
     def _test_debug_helper_print_canvas(self):
         """for debugging: print the current canvas to stdout"""
@@ -152,6 +280,7 @@ class CharacterBasedErikaMock(AbstractErikaMock):
         print()
 
 
+# TODO in another ticket: switch MicrostepBasedErikaMock over to using curses
 class MicrostepBasedErikaMock(AbstractErikaMock):
 
     def __init__(self,
@@ -171,8 +300,8 @@ class MicrostepBasedErikaMock(AbstractErikaMock):
         self.canvas_x = 0
         self.canvas_y = 0
         self.exception_if_overprinted = exception_if_overprinted
-        self.output_after_each_step = output_after_each_step
         self.delay_after_each_step = delay_after_each_step
+        self.output_after_each_step = output_after_each_step
 
     # microstep-based
     def move_down_microstep(self):
@@ -200,10 +329,14 @@ class MicrostepBasedErikaMock(AbstractErikaMock):
                   "if you need more space".format(self.canvas_x, self.canvas_y, self.width, self.height))
             sys.exit(1)
         self.canvas_x += 1
+
         if self.output_after_each_step:
             self._test_debug_helper_print_canvas()
-            if self.delay_after_each_step > 0:
-                sleep(self.delay_after_each_step)
+        if self.delay_after_each_step > 0:
+            sleep(self.delay_after_each_step)
+
+    def wait_for_user_if_simulated(self):
+        pass
 
     def _test_debug_helper_print_canvas(self):
         """for debugging: print the current canvas to stdout"""
@@ -238,5 +371,3 @@ class MicrostepBasedErikaMock(AbstractErikaMock):
 
     def print_ascii(self, text):
         raise Exception('Characters and character steps are not supported in microstep-based tests')
-
-

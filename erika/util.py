@@ -1,5 +1,6 @@
 import math
 
+
 def twos_complement_hex_string(number):
     """
     :param number: number to convert
@@ -9,6 +10,7 @@ def twos_complement_hex_string(number):
     intermediate_bytes = intermediate.to_bytes(1, 'little')
     hex_string = intermediate_bytes.hex()
     return hex_string.upper()
+
 
 def twos_complement(number):
     """
@@ -31,4 +33,3 @@ def twos_complement(number):
         return xorResult + 1
     else:
         return number
-

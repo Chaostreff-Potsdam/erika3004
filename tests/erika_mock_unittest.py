@@ -27,7 +27,7 @@ def transform_to_printable(line):
 class ErikaMockTest(unittest.TestCase):
     def test_write_and_read_back_characters(self):
         """simple test that the CharacterBasedErikaMock records what is written to it"""
-        my_erika = CharacterBasedErikaMock(width=5, height=3)
+        my_erika = CharacterBasedErikaMock(width=5, height=3, inside_unit_test=True)
         my_erika.print_ascii("Hello")
         my_erika.move_down()
         my_erika.move_down()

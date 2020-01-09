@@ -82,6 +82,19 @@ sudo apt-get install python3-pip
 pip3 install -r requirements.txt
 ```
 
+### Install tab autocompletion for erika.sh
+
+If you want to use the command-line interface (CLI) of `erika.sh` with automated completion if you press the <Tab> character, 
+run the install script:  
+```
+./activate_autocomplete_for_erika_sh.sh
+```
+
+The script may fail under certain circumstances - requiring SUDO permissions. In this case, try again like this: 
+```
+sudo ./activate_autocomplete_for_erika_sh.sh
+```
+
 
 ## ASCII art
 
@@ -120,6 +133,30 @@ It offers the following built-in rendering strategies:
 
 For further information, simply call   
 ```./erika.sh -h```
+
+### Print images
+
+This works mostly just like for ASCII art images, described in the previous section.
+
+If as a file parameter for the CLI you specify an image file, it will be printed pixel by pixel, according to the
+specified rendering strategy, like before for ASCII art images.
+
+### Play "Tic Tac Toe"
+
+To run the Tic Tac Toe game in a simulated environment, call this in your shell:
+
+```
+ ./erika.sh tictactoe -d
+```
+
+Play against the real Erika machine (use the right port as parameter):
+```
+./erika.sh tictactoe -p "/dev/ttyACM0"
+```
+
+To control the game: 
+* use the WASD keys to move
+* use the space bar or enter key to make your mark at the current position
 
 ## Testing
 

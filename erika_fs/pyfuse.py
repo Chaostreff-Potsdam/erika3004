@@ -58,7 +58,8 @@ class TestFs(pyfuse3.Operations):
         super(TestFs, self).__init__()
         self.hello_name = b"erika"
         self.hello_inode = pyfuse3.ROOT_INODE + 1
-        self.erika = erika.erika.Erika("/dev/pts/4")
+        self.erika = erika.erika.Erika("/dev/pts/2")
+        self.stamp = time.time_ns()
 
     async def getattr(self, inode, ctx=None):
         entry = pyfuse3.EntryAttributes()
@@ -66,15 +67,15 @@ class TestFs(pyfuse3.Operations):
             entry.st_mode = (stat.S_IFDIR | 0o755)
             entry.st_size = 0
         elif inode == self.hello_inode:
-            entry.st_mode = (stat.S_IFREG | 0o666)
+            entry.st_mode = (stat.S_IFCHR | 0o666)
             entry.st_size = 0
         else:
             raise pyfuse3.FUSEError(errno.ENOENT)
 
-        stamp = time.time()
-        entry.st_atime_ns = stamp
-        entry.st_ctime_ns = stamp
-        entry.st_mtime_ns = stamp
+        # print(self.stamp)
+        entry.st_atime_ns = self.stamp
+        entry.st_ctime_ns = self.stamp
+        entry.st_mtime_ns = self.stamp
         entry.st_gid = os.getgid()
         entry.st_uid = os.getuid()
         entry.st_ino = inode
@@ -92,7 +93,7 @@ class TestFs(pyfuse3.Operations):
         return inode
 
     async def readdir(self, fh, start_id, token):
-        assert fh == pyfuse3.ROOT_INODE
+        # assert fh == pyfuse3.ROOT_INODE
 
         # only one entry
         if start_id == 0:
@@ -101,21 +102,24 @@ class TestFs(pyfuse3.Operations):
         return
 
     async def open(self, inode, flags, ctx):
-        if inode != self.hello_inode:
-            raise pyfuse3.FUSEError(errno.ENOENT)
+        # if inode != self.hello_inode:
+        #raise pyfuse3.FUSEError(errno.ENOENT)
         # if flags & os.O_RDWR or flags & os.O_WRONLY:
         #     raise pyfuse3.FUSEError(errno.EPERM)
         return inode
 
     async def read(self, fh, off, size):
-        assert fh == self.hello_inode
+        #assert fh == self.hello_inode
         return r""  # self.hello_data[off:off+size]
 
     async def write(self, fh, off, buf):
-        assert fh == self.hello_inode
+        #assert fh == self.hello_inode
         self.erika.print_ascii(buf.decode("utf-8"))
         print(buf)
         return len(buf)
+
+    #async def releasedir(self, fh):
+
 
 
 def init_logging(debug=False):
