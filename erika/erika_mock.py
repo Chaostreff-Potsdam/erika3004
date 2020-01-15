@@ -143,6 +143,125 @@ class CharacterBasedErikaMock(AbstractErikaMock):
     def __init__(self,
                  width=ERIKA_PAGE_WIDTH_CHARACTERS_SOFT_LIMIT_AT_12_CHARS_PER_INCH,
                  height=ERIKA_PAGE_HEIGHT_CHARACTERS,
+                 exception_if_overprinted=True,
+                 delay_after_each_step=0,
+                 inside_unit_test=False):
+        self.inside_unit_test = inside_unit_test
+
+        # if your program fails here, add environment variable TERM=linux
+        self.stdscr = curses.initscr()
+
+        # self._resize_if_more_space_is_needed(height, width)
+
+        # no enter key needed to post input;
+        # can be disabled, it caused error when running print-out-only tests
+        if not self.inside_unit_test:
+            curses.cbreak()
+        curses.nl()
+
+        # escape sequences (numpad, function keys, ...) will be interpreted
+        self.stdscr.keypad(True)
+
+        self.stdscr.move(0, 0)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        # caused error when running tests
+        if not self.inside_unit_test:
+            curses.nocbreak()
+        self.stdscr.keypad(False)
+        curses.echo()
+        # caused error when running tests
+        if not self.inside_unit_test:
+            curses.endwin()
+
+    def set_keyboard_echo(self, value):
+        if value:
+            curses.echo()
+        else:
+            curses.noecho()
+
+    def read(self):
+        c = chr(self.stdscr.getch())
+        return c
+
+    def wait_for_user_if_simulated(self):
+        self.stdscr.getch()
+
+    # microstep-based
+
+    def move_down_microstep(self):
+        raise Exception('Microsteps are not supported in character-based tests')
+
+    def move_up_microstep(self):
+        raise Exception('Microsteps are not supported in character-based tests')
+
+    def move_right_microsteps(self, num_steps=1):
+        raise Exception('Microsteps are not supported in character-based tests')
+
+    def move_left_microsteps(self, num_steps=1):
+        raise Exception('Microsteps are not supported in character-based tests')
+
+    def print_pixel(self):
+        raise Exception('Microsteps are not supported in character-based tests')
+
+    # character-based
+
+    def move_up(self):
+        if not self.inside_unit_test:
+            self._cursor_up()
+
+    def move_down(self):
+        if not self.inside_unit_test:
+            self._cursor_down()
+
+    def move_left(self):
+        if not self.inside_unit_test:
+            self._cursor_back()
+
+    def move_right(self):
+        if not self.inside_unit_test:
+            self._cursor_forward()
+
+    def _cursor_up(self, n=1):
+        y, x = self.stdscr.getyx()
+        self.stdscr.move(y - n, x)
+
+    def _cursor_down(self, n=1):
+        y, x = self.stdscr.getyx()
+        self.stdscr.move(y + n, x)
+
+    def _cursor_forward(self, n=1):
+        y, x = self.stdscr.getyx()
+        self.stdscr.move(y, x + n)
+
+    def _cursor_back(self, n=1):
+        y, x = self.stdscr.getyx()
+        self.stdscr.move(y, x - n)
+
+    def demo(self):
+        for i in range(0, 10):
+            self.move_down()
+        self.print_ascii(":)")
+        for i in range(0, 10):
+            self.move_down()
+
+    def crlf(self):
+        y, x = self.stdscr.getyx()
+        self.stdscr.move(y + 1, 0)
+
+    def print_ascii(self, text):
+        self.stdscr.addstr(text)
+        self.stdscr.refresh()
+
+
+class SimpleErikaMock(AbstractErikaMock):
+
+    def __init__(self,
+                 width=ERIKA_PAGE_WIDTH_CHARACTERS_SOFT_LIMIT_AT_12_CHARS_PER_INCH,
+                 height=ERIKA_PAGE_HEIGHT_CHARACTERS,
                  exception_if_overprinted=False,
                  delay_after_each_step=0,
                  inside_unit_test=False):

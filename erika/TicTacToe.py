@@ -15,11 +15,12 @@ class Players(Enum):
         return self.player_chars.value[self.value]
 
 
-def create_field(field_size=3, cell_width=3, cell_height=1, vertical_sep="#", horizontal_sep="#"):
+def create_field(field_size=3, cell_width=3, cell_height=1, vertical_sep="#", horizontal_sep="#", x_offset=0):
     result = []
     cell = " " * cell_width
-    row = vertical_sep.join([cell] * field_size)
-    horizontal_line = (horizontal_sep * len(row))
+    padding = " " * x_offset
+    row = padding + vertical_sep.join([cell] * field_size)
+    horizontal_line = padding + (horizontal_sep * (len(row) - x_offset))
 
     for i in range(0, field_size - 1):
         result.extend([row] * cell_height)
@@ -62,6 +63,8 @@ class TicTacToe:
         # disable keyboard echo
         self.erika.set_keyboard_echo(False)
 
+        self.erika.print_ascii("\n")
+
         self._print_initial_field()
 
         self._cursor_to_start_position()
@@ -71,17 +74,17 @@ class TicTacToe:
         self.game_loop()
 
     def _print_initial_field(self):
+
+        x_offset = 30
         ascii_field = create_field(self.field_size, cell_height=self.cell_height
                                    , cell_width=self.cell_width, vertical_sep=self.vertical_sep
-                                   , horizontal_sep=self.horizontal_sep)
-        for i in range(0, len(ascii_field) - 1):
-            self.erika.print_ascii(ascii_field[i])
-            self.erika.crlf()
-        self.erika.print_ascii(ascii_field[-1])
+                                   , horizontal_sep=self.horizontal_sep, x_offset=x_offset)
 
-        for i in range(0, len(ascii_field[0])):
+        self.erika.print_ascii("\n".join(ascii_field))
+
+        for i in range(len(ascii_field[0]) - x_offset):
             self.erika.move_left()
-        for i in range(0, len(ascii_field) - 1):
+        for i in range(len(ascii_field) - 1):
             self.erika.move_up()
 
     def _cursor_to_start_position(self):
@@ -144,7 +147,7 @@ class TicTacToe:
         self.erika._cursor_back(1)
         self.erika._cursor_down(1)
         self.erika.print_ascii("Tie!\n")
-        self.erika.print_ascii("Press any key to exit.")
+        self.erika.print_ascii("Press any key to exit.\n")
         self.erika.read()
 
     def _won(self, winner):
@@ -153,7 +156,7 @@ class TicTacToe:
         self.erika._cursor_back(1)
         self.erika._cursor_down(1)
         self.erika.print_ascii(f"{Players(winner).name} won.\n")
-        self.erika.print_ascii("Press any key to exit.")
+        self.erika.print_ascii("Press any key to exit.\n")
         self.erika.read()
 
     def move_abs(self, x, y):
@@ -253,3 +256,10 @@ class TicTacToe:
         self.make_move(Players.Erika)
         self.turn = Players.Player1.value
 
+
+if __name__ == "__main__":
+    from erika.erika_mock import CharacterBasedErikaMock
+
+    erika = CharacterBasedErikaMock()
+    with TicTacToe(erika) as game:
+        game.start_game()
