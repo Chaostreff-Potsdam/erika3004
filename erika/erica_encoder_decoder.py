@@ -6,7 +6,7 @@ def transpose_dict(dictionary):
 
 
 class DDR_ASCII:
-    CONVERSION_TABLE_PATH = "../erika/charTranslation.json"
+    CONVERSION_TABLE_PATH = "./erika/charTranslation.json"
 
     def __init__(self, *args, **kwargs):
         """read conversion table from file and populate 2 dicts"""
