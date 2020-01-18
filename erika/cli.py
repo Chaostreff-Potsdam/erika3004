@@ -117,11 +117,12 @@ def print_ascii_art(args):
             renderer = ErikaImageRenderer(erika, strategy_string)
             renderer.render_file(file_path)
     finally:
-        erika.wait_for_user_if_simulated()
+        if erika:
+            erika.wait_for_user_if_simulated()
 
-        # Do a proper shutdown even in case of exception - or curses settings may make the current terminal unusable.
-        # I googled - it's okay to call __exit__ directly ( https://stackoverflow.com/a/26635947/1143126 )
-        erika.__exit__()
+            # Do a proper shutdown even in case of exception - or curses settings may make the current terminal unusable.
+            # I googled - it's okay to call __exit__ directly ( https://stackoverflow.com/a/26635947/1143126 )
+            erika.__exit__()
 
 
 def run_tic_tac_toe(args):
@@ -137,18 +138,15 @@ def get_erika_for_given_args(args, is_character_based=False):
     if is_dry_run:
         if is_character_based or not 'file' in args:
             # using low size just so it fits on the screen well - does not reflect the paper dimensions that Erika supports
-            erika = CharacterBasedErikaMock(DRY_RUN_WIDTH, DRY_RUN_HEIGHT, delay_after_each_step=DRY_RUN_DELAY,
-                                            exception_if_overprinted=False)
+            erika = CharacterBasedErikaMock(DRY_RUN_WIDTH, DRY_RUN_HEIGHT, delay_after_each_step=DRY_RUN_DELAY)
         else:
             # a bit hacky, as I'm mirroring behavior from ErikaImageRenderer - this kindof goes against the now-beautiful architecture :(
             try:
                 # hacky: use exception to determine image type
                 image_for_provoking_exception = WrappedImage(args.file)
-                erika = MicrostepBasedErikaMock(DRY_RUN_WIDTH, DRY_RUN_HEIGHT, output_after_each_step=True,
-                                                delay_after_each_step=DRY_RUN_DELAY, exception_if_overprinted=False)
+                erika = MicrostepBasedErikaMock(DRY_RUN_WIDTH, DRY_RUN_HEIGHT, delay_after_each_step=DRY_RUN_DELAY)
             except NotAnImageException:
-                erika = CharacterBasedErikaMock(DRY_RUN_WIDTH, DRY_RUN_HEIGHT, delay_after_each_step=DRY_RUN_DELAY,
-                                                exception_if_overprinted=False)
+                erika = CharacterBasedErikaMock(DRY_RUN_WIDTH, DRY_RUN_HEIGHT, delay_after_each_step=DRY_RUN_DELAY)
 
     else:
         erika = Erika(com_port)
@@ -193,7 +191,7 @@ def main():
     # with argcomplete used now, this shoudl be the very first call - no side-effects should happen before
     argument_parser = create_argument_parser()
     args = argument_parser.parse_args()
-    if ('func' in args):
+    if 'func' in args:
         args.func(args)
     else:
         argument_parser.parse_args('-h')

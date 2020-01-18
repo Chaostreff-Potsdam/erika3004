@@ -46,7 +46,6 @@ class AbstractErika(EscapeSequenceDecoder):
         else:
             return super(AbstractErika, cls).__new__(cls)
 
-
     @enforcedmethod
     def alarm(self, duration):
         pass
@@ -116,6 +115,13 @@ class AbstractErika(EscapeSequenceDecoder):
     def wait_for_user_if_simulated(self):
         pass
 
+    @enforcedmethod
+    def delete_pixel(self):
+        pass
+
+    @enforcedmethod
+    def delete_ascii(self, reversed_text):
+        pass
 
 
 class Erika(AbstractErika):
@@ -123,7 +129,7 @@ class Erika(AbstractErika):
     def __init__(self, com_port, rts_cts=True, *args, **kwargs):
         """Set comport to serial device that connects to Erika typewriter."""
         self.com_port = com_port
-        self.connection = serial.Serial(com_port, ERIKA_BAUDRATE, rtscts=rts_cts)  # , timeout=0, parity=serial.PARITY_EVEN, rtscts=1)
+        self.connection = serial.Serial(com_port, ERIKA_BAUDRATE, rtscts=rts_cts)
         self.ddr_ascii = DDR_ASCII()
         self.use_rts_cts = rts_cts
 
@@ -160,6 +166,33 @@ class Erika(AbstractErika):
         for c in text:
             key_id = self.ddr_ascii.encode(c)
             self._write_byte(key_id)
+
+    def _set_reverse_printing_mode(self, value):
+        if value:
+            self._write_byte("8E")
+        else:
+            self._write_byte("8D")
+
+    def _set_correction_mode(self, value):
+        """Enable / Disable correction mode - i.e. for True, switch to correction tape, for False, switch to normal tape"""
+        if value:
+            self._write_byte("8C")
+        else:
+            self._write_byte("8B")
+
+    def delete_ascii(self, reversed_text):
+        """Delete given string on the Erika typewriter, going backwards."""
+
+        # enable correction_mode and reverse printing
+        self._set_correction_mode(True)
+        self._set_reverse_printing_mode(True)
+
+        # send text to be deleted
+        self.print_ascii(reversed_text)
+
+        # reset to normal operating mode
+        self._set_reverse_printing_mode(False)
+        self._set_correction_mode(False)
 
     def move_up(self):
         self._cursor_up()
@@ -205,6 +238,10 @@ class Erika(AbstractErika):
         """
         self.print_ascii(".")
         self.move_left_microsteps(MICROSTEPS_PER_CHARACTER_WIDTH - 1)
+
+    def delete_pixel(self):
+        """deletes pixel at current coursor, moves left afterwards"""
+        self.delete_ascii(".")
 
     def crlf(self):
         self._write_byte("77")
@@ -353,4 +390,3 @@ class Erika(AbstractErika):
 
     def wait_for_user_if_simulated(self):
         pass
-

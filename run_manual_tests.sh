@@ -17,13 +17,15 @@ echo """
 
 Please do run the unit tests first!
 
-Then, just play along: press any key once the
+Then, just play along: PRESS ANY KEY once the
 program seems to stop, finish any games that
 come up.
 
 Afterward, you can be fairly sure everything
 is still working!
 "
+
+read
 
 # fail on error
 set -e
@@ -37,6 +39,8 @@ set -x
 
 ./erika.sh render_ascii_art -h
 ./erika.sh render_ascii_art -d -f ./tests/test_resources/test_ascii_art.txt
+# FIXME
+#cat tests/test_resources/test_ascii_art.txt | ./erika.sh render_ascii_art -d
 ./erika.sh render_ascii_art -d -f ./tests/test_resources/test_ascii_art.txt -s LineByLine
 ./erika.sh render_ascii_art -d -f ./tests/test_resources/test_ascii_art.txt -s Interlaced
 ./erika.sh render_ascii_art -d -f ./tests/test_resources/test_ascii_art.txt -s RandomDotFill

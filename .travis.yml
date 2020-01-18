@@ -11,4 +11,4 @@ python:
 install:
   - pip install -r test_requirements.txt
 script:
-  - pytest --cov=erika tests/ --cov-report=html -m 'not hardware'
+  - pytest --cov=erika tests/ --cov-report=html --html=test_output/report.html -m 'not hardware'
