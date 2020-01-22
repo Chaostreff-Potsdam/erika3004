@@ -167,7 +167,7 @@ class Erika(AbstractErika):
             key_id = self.ddr_ascii.encode(c)
             self._write_byte(key_id)
 
-    def fast_print(self, text):
+    def _fast_print(self, text):
         """uses reverse printing mode to print even faster"""
         lines = text.split("\n")
         assert len(lines) >= 2, "need at least 2 lines to use fast_printing"
