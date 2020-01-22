@@ -178,6 +178,7 @@ class Erika(AbstractErika):
 
             self._set_reverse_printing_mode(True)
             line_odd = reverse_string(line_odd).rjust(len(line_even))
+            self.print_ascii(line_odd)
             self._set_reverse_printing_mode(False)
 
             self.move_down()
