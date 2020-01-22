@@ -1,20 +1,10 @@
 # PYTHON_ARGCOMPLETE_OK
 # ^ is about auto-completion, see https://argcomplete.readthedocs.io/en/latest/#global-completion
 
-import os
-import sys
 from argparse import ArgumentParser
 from argparse import RawTextHelpFormatter
-from multiprocessing import Process
-from multiprocessing import Queue
-from queue import Empty
 
 import argcomplete
-
-from erika.TicTacToe import TicTacToe
-from erika.erika import Erika
-from erika.erika_image_renderer import *
-from erika.erika_mock import *
 
 DRY_RUN_WIDTH = 60
 DRY_RUN_HEIGHT = 40
@@ -104,6 +94,8 @@ New: If an image file is referenced instead, will do a monochrome print using ".
 
 
 def print_ascii_art(args):
+    from erika.erika_image_renderer import ErikaImageRenderer
+
     strategy_string = args.strategy
     file_path = args.file
     try:
@@ -126,12 +118,16 @@ def print_ascii_art(args):
 
 
 def run_tic_tac_toe(args):
+    from erika.TicTacToe import TicTacToe
     erika = get_erika_for_given_args(args, is_character_based=True)
     with TicTacToe(erika) as game:
         game.start_game()
 
 
 def get_erika_for_given_args(args, is_character_based=False):
+    from erika.erika import Erika
+    from erika.erika_mock import CharacterBasedErikaMock
+
     is_dry_run = args.dry_run
     com_port = args.serial_port
 
@@ -140,6 +136,10 @@ def get_erika_for_given_args(args, is_character_based=False):
             # using low size just so it fits on the screen well - does not reflect the paper dimensions that Erika supports
             erika = CharacterBasedErikaMock(DRY_RUN_WIDTH, DRY_RUN_HEIGHT, delay_after_each_step=DRY_RUN_DELAY)
         else:
+            from erika.erika_mock import MicrostepBasedErikaMock
+            from erika.image_converter import WrappedImage
+            from erika.image_converter import NotAnImageException
+
             # a bit hacky, as I'm mirroring behavior from ErikaImageRenderer - this kindof goes against the now-beautiful architecture :(
             try:
                 # hacky: use exception to determine image type
@@ -155,6 +155,11 @@ def get_erika_for_given_args(args, is_character_based=False):
 
 
 def read_lines_from_stdin_non_blocking():
+    import sys
+    from multiprocessing import Process
+    from multiprocessing import Queue
+    from queue import Empty
+
     lines = []
 
     queue_to_pass_lines_through = Queue(maxsize=1)
@@ -181,6 +186,7 @@ def function_for_reading_lines_from_stdin_process(queue_to_pass_lines_through, i
     # https://docs.python.org/3.5/library/multiprocessing.html#all-start-methods
     # Note to self: portable :)
     # https://docs.python.org/3/library/os.html#os.fdopen
+    import os
     input_stream = os.fdopen(input_stream_fileno)
 
     lines = input_stream.readlines()
