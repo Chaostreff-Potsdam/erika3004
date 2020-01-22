@@ -85,7 +85,7 @@ New: If an image file is referenced instead, will do a monochrome print using ".
         * default option
     Interlaced
         * render the given image, every even line first (starting count at 0), every odd line later
-    PerpendicularSpiralInward ##
+    PerpendicularSpiralInward
         * render the given image, spiralling inward to the middle while going parallel to X or Y axis all the time
     RandomDotFill
         * render the given image, printing one random letter at a time
