@@ -4,7 +4,7 @@ from enum import Enum
 import serial
 
 from erika.erica_encoder_decoder import DDR_ASCII
-from erika.util import twos_complement_hex_string
+from erika.util import twos_complement_hex_string, reverse_string
 from erika_fs.ansii_decoder import *
 
 ERIKA_BAUDRATE = 1200
@@ -166,27 +166,21 @@ class Erika(AbstractErika):
         for c in text:
             key_id = self.ddr_ascii.encode(c)
             self._write_byte(key_id)
-    
+
     def fast_print(self, text):
         """uses reverse printing mode to print even faster"""
         lines = text.split("\n")
-        even = True
-        for line in lines:
-            if even:
-                self._set_reverse_printing_mode(False)
-            else:
-                self._set_reverse_printing_mode(True)
-                #reverse string
-                line = "".join(reversed(line))
+        assert len(lines) >= 2, "need at least 2 lines to use fast_printing"
+        for line_even, line_odd in zip(lines[::2], lines[1::2]):
+            self.print_ascii(line_even.ljust(len(line_odd)))
 
-            for c in line:
-                key_id = self.ddr_ascii.encode(c)
-                self._write_byte_delay(key_id)
-            
             self.move_down()
-            even = not even
-        # reset to normal printing mode
-        self._set_reverse_printing_mode(False)
+
+            self._set_reverse_printing_mode(True)
+            line_odd = reverse_string(line_odd).rjust(len(line_even))
+            self._set_reverse_printing_mode(False)
+
+            self.move_down()
 
     def _set_reverse_printing_mode(self, value):
         if value:

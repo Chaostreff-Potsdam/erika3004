@@ -1,5 +1,7 @@
 import math
 
+def reverse_string(inp):
+    return "".join(reversed(inp))
 
 def twos_complement_hex_string(number):
     """
