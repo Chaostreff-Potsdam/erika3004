@@ -1,8 +1,6 @@
 dist: xenial
 language: python
 python:
-  - "3.5"
-  - "3.5-dev"
   - "3.6"
   - "3.6-dev"
   - "3.7"
@@ -13,4 +11,4 @@ python:
 install:
   - pip install -r test_requirements.txt
 script:
-  - pytest --cov=erika tests/ --cov-report=html -m 'not hardware'
+  - pytest --cov=erika tests/ --cov-report=html --html=test_output/report.html -m 'not hardware'

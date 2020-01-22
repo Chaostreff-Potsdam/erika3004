@@ -164,12 +164,16 @@ class PerpendicularSpiralInwardErikaImageRenderingStrategy(ErikaImageRenderingSt
         #
         # <=====
         #
-        for x in range(lower_right_x - 1, upper_left_x - 1, -1):
+        for x in range(lower_right_x - 1, upper_left_x, -1):
             erika_image_abstraction.print_at(x, lower_right_y)
             erika_image_abstraction.move_left()
             erika_image_abstraction.move_left()
 
-        erika_image_abstraction.move_right()
+        # make this a separate step - curses will fail if this would go off screen
+        for x in range(upper_left_x, upper_left_x - 1, -1):
+            erika_image_abstraction.print_at(x, lower_right_y)
+            erika_image_abstraction.move_left()
+
         erika_image_abstraction.move_up()
 
         # /\

@@ -8,6 +8,7 @@ This way, rendering algorithms can be tested.
 # y ||
 #   ||
 #   \/
+import curses
 import sys
 from time import sleep
 
@@ -31,40 +32,29 @@ ERIKA_PAGE_HEIGHT_MICROSTEPS = ERIKA_PAGE_HEIGHT_CHARACTERS * MICROSTEPS_PER_CHA
 
 class AbstractErikaMock(AbstractErika):
 
-    def __enter__(self):
-        return self
+    def __init__(self, width, height, exception_if_overprinted, delay_after_each_step, inside_unit_test):
+        super().__init__()
+        self.inside_unit_test = inside_unit_test
 
-    def __exit__(self, *args):
-        pass
+        # if your program fails here, add environment variable TERM=linux
+        self.stdscr = curses.initscr()
 
-    def alarm(self, duration):
-        pass
+        if inside_unit_test:
+            self.stdscr.clear()
 
-    def read(self):
-        # reading not needed for current tests
-        pass
+        self._resize_if_more_space_is_needed(height, width)
 
-    def _print_raw(self, data):
-        raise Exception('User is not supposed to call this function directly')
+        # no enter key needed to post input;
+        # can be disabled, it caused error when running print-out-only tests
+        if not self.inside_unit_test:
+            curses.cbreak()
+        curses.nl()
 
-    def _advance_paper(self):
-        raise Exception('User is not supposed to call this function directly')
+        # escape sequences (numpad, function keys, ...) will be interpreted
+        self.stdscr.keypad(True)
 
-    def _write_byte_delay(self, data, delay=0.5):
-        raise Exception('User is not supposed to call this function directly')
+        self.stdscr.move(0, 0)
 
-    def set_keyboard_echo(self, value):
-        raise Exception('Not supported yet')
-
-
-class CharacterBasedErikaMock(AbstractErikaMock):
-
-    def __init__(self,
-                 width=ERIKA_PAGE_WIDTH_CHARACTERS_SOFT_LIMIT_AT_12_CHARS_PER_INCH,
-                 height=ERIKA_PAGE_HEIGHT_CHARACTERS,
-                 exception_if_overprinted=True,
-                 output_after_each_step=False,
-                 delay_after_each_step=0):
         self.width = width
         self.height = height
         self.canvas = []
@@ -76,8 +66,87 @@ class CharacterBasedErikaMock(AbstractErikaMock):
         self.canvas_x = 0
         self.canvas_y = 0
         self.exception_if_overprinted = exception_if_overprinted
-        self.output_after_each_step = output_after_each_step
         self.delay_after_each_step = delay_after_each_step
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        # caused error when running tests
+        if not self.inside_unit_test:
+            curses.nocbreak()
+        self.stdscr.keypad(False)
+        curses.echo()
+        # caused error when running tests
+        if not self.inside_unit_test:
+            curses.endwin()
+
+    def _resize_if_more_space_is_needed(self, height, width):
+        window_max_y, window_max_x = self.stdscr.getmaxyx()
+        if window_max_x <= (width + 2) or window_max_y <= (height + 2):
+            self.stdscr.resize(max(window_max_y, height + 2), max(window_max_x, width + 2))
+
+    def _cursor_up(self, n=1):
+        y, x = self.stdscr.getyx()
+        self.stdscr.move(y - n, x)
+        self.canvas_y -= n
+
+    def _cursor_down(self, n=1):
+        y, x = self.stdscr.getyx()
+        self.stdscr.move(y + n, x)
+        self.canvas_y += n
+
+    def _cursor_back(self, n=1):
+        y, x = self.stdscr.getyx()
+        self.stdscr.move(y, x - n)
+        self.canvas_x -= n
+
+    def _cursor_forward(self, n=1):
+        y, x = self.stdscr.getyx()
+        self.stdscr.move(y, x + n)
+        self.canvas_x += n
+
+    def set_keyboard_echo(self, value):
+        if value:
+            curses.echo()
+        else:
+            curses.noecho()
+
+    def wait_for_user_if_simulated(self):
+        self.stdscr.getch()
+
+    def alarm(self, duration):
+        # curses supports beep(), but this does not seem to work everywhere
+        pass
+
+    def read(self):
+        c = chr(self.stdscr.getch())
+        return c
+
+    def _print_raw(self, data):
+        raise Exception('User is not supposed to call this function directly')
+
+    def _advance_paper(self):
+        raise Exception('User is not supposed to call this function directly')
+
+    def _write_byte(self, data, delay=0.5):
+        raise Exception('User is not supposed to call this function directly')
+
+    def decode(self, value):
+        raise Exception('Not supported yet')
+
+
+# to get exception-safe behavior, make sure __exit__ is always called (by using with-statements)
+class CharacterBasedErikaMock(AbstractErikaMock):
+
+    def __init__(self,
+                 width=ERIKA_PAGE_WIDTH_CHARACTERS_SOFT_LIMIT_AT_12_CHARS_PER_INCH,
+                 height=ERIKA_PAGE_HEIGHT_CHARACTERS,
+                 exception_if_overprinted=False,
+                 delay_after_each_step=0,
+                 inside_unit_test=False):
+        super(CharacterBasedErikaMock, self).__init__(width, height, exception_if_overprinted, delay_after_each_step,
+                                                      inside_unit_test)
 
     # microstep-based
 
@@ -96,19 +165,22 @@ class CharacterBasedErikaMock(AbstractErikaMock):
     def print_pixel(self):
         raise Exception('Microsteps are not supported in character-based tests')
 
+    def delete_pixel(self):
+        raise Exception('Microsteps are not supported in character-based tests')
+
     # character-based
 
     def move_up(self):
-        self.canvas_y -= 1
+        self._cursor_up()
 
     def move_down(self):
-        self.canvas_y += 1
+        self._cursor_down()
 
     def move_left(self):
-        self.canvas_x -= 1
+        self._cursor_back()
 
     def move_right(self):
-        self.canvas_x += 1
+        self._cursor_forward()
 
     def demo(self):
         for i in range(0, 10):
@@ -120,11 +192,13 @@ class CharacterBasedErikaMock(AbstractErikaMock):
     def crlf(self):
         self.canvas_x = 0
         self.canvas_y += 1
+        y, x = self.stdscr.getyx()
+        self.stdscr.move(y + 1, 0)
 
     def print_ascii(self, text):
+        y, x = self.stdscr.getyx()
         for c in text:
             try:
-                # print('Trying to print letter "{}" at ({}, {}).'.format(c, self.canvas_x, self.canvas_y))
                 if not self.canvas[self.canvas_y][self.canvas_x] == " ":
                     if self.exception_if_overprinted:
                         raise Exception(
@@ -136,85 +210,108 @@ class CharacterBasedErikaMock(AbstractErikaMock):
                       "cli.DRY_RUN_WIDTH and cli.DRY_RUN_HEIGHT "
                       "if you need more space".format(self.canvas_x, self.canvas_y, self.width, self.height))
                 sys.exit(1)
-
             self.canvas_x += 1
-            if self.output_after_each_step:
-                self._test_debug_helper_print_canvas()
-                if self.delay_after_each_step > 0:
-                    sleep(self.delay_after_each_step)
 
-    def _test_debug_helper_print_canvas(self):
-        """for debugging: print the current canvas to stdout"""
-        print(' ' + ''.zfill(self.width).replace('0', '#'))
-        for line in self.canvas:
-            print('#' + ''.join(line) + '#')
-        print(' ' + ''.zfill(self.width).replace('0', '#'))
-        print()
+        self.stdscr.addstr(text)
+        self.stdscr.move(y, x + len(text))
+
+        if self.delay_after_each_step > 0:
+            sleep(self.delay_after_each_step)
+        self.stdscr.refresh()
+
+    def delete_ascii(self, reversed_text):
+        text_length = len(reversed_text)
+        if text_length == 0:
+            return
+
+        self.canvas_x -= 1
+        y, x = self.stdscr.getyx()
+        for c in reversed_text:
+            try:
+                if self.canvas[self.canvas_y][self.canvas_x] == c:
+                    self.canvas[self.canvas_y][self.canvas_x] = " "
+                else:
+                    raise Exception("Unexpected letter at current position: '{}' at ({}, {})."
+                                    .format(c, self.canvas_x, self.canvas_y))
+            except IndexError as e:
+                print("IndexError at ({}, {}) of ({}, {}) - increase values of "
+                      "cli.DRY_RUN_WIDTH and cli.DRY_RUN_HEIGHT "
+                      "if you need more space".format(self.canvas_x, self.canvas_y, self.width, self.height))
+                sys.exit(1)
+            self.canvas_x -= 1
+        self.canvas_x += 1
+
+        self.stdscr.move(y, x - text_length)
+        self.stdscr.addstr((" " * text_length))
+        self.stdscr.move(y, x - text_length)
+
+        if self.delay_after_each_step > 0:
+            sleep(self.delay_after_each_step)
+        self.stdscr.refresh()
 
 
 class MicrostepBasedErikaMock(AbstractErikaMock):
 
     def __init__(self,
-                 width=ERIKA_PAGE_WIDTH_MICROSTEPS_HARD_LIMIT_AT_12_CHARS_PER_INCH,
-                 height=ERIKA_PAGE_HEIGHT_MICROSTEPS,
-                 exception_if_overprinted=True,
-                 output_after_each_step=False,
-                 delay_after_each_step=0):
-        self.width = width
-        self.height = height
-        self.canvas = []
-        for y in range(height):
-            new_list = []
-            for x in range(width):
-                new_list.append(False)
-            self.canvas.append(new_list)
-        self.canvas_x = 0
-        self.canvas_y = 0
-        self.exception_if_overprinted = exception_if_overprinted
-        self.output_after_each_step = output_after_each_step
-        self.delay_after_each_step = delay_after_each_step
+                 width=ERIKA_PAGE_WIDTH_CHARACTERS_SOFT_LIMIT_AT_12_CHARS_PER_INCH,
+                 height=ERIKA_PAGE_HEIGHT_CHARACTERS,
+                 exception_if_overprinted=False,
+                 delay_after_each_step=0,
+                 inside_unit_test=False):
+        super(MicrostepBasedErikaMock, self).__init__(width, height, exception_if_overprinted, delay_after_each_step,
+                                                      inside_unit_test)
 
     # microstep-based
     def move_down_microstep(self):
-        self.canvas_y += 1
+        self._cursor_down()
 
     def move_up_microstep(self):
-        self.canvas_y -= 1
+        self._cursor_up()
 
     def move_right_microsteps(self, num_steps=1):
-        self.canvas_x += num_steps
+        self._cursor_forward(num_steps)
 
     def move_left_microsteps(self, num_steps=1):
-        self.canvas_x -= num_steps
+        self._cursor_back(num_steps)
 
     def print_pixel(self):
         try:
-            if self.canvas[self.canvas_y][self.canvas_x]:
+            if self.canvas[self.canvas_y][self.canvas_x] == "X":
                 if self.exception_if_overprinted:
                     raise Exception(
                         "Not supposed to print a pixel twice: at ({}, {}).".format(self.canvas_x, self.canvas_y))
-            self.canvas[self.canvas_y][self.canvas_x] = True
+            self.canvas[self.canvas_y][self.canvas_x] = "X"
         except IndexError as e:
             print("IndexError at ({}, {}) of ({}, {}) - increase values of "
                   "cli.DRY_RUN_WIDTH and cli.DRY_RUN_HEIGHT "
                   "if you need more space".format(self.canvas_x, self.canvas_y, self.width, self.height))
             sys.exit(1)
         self.canvas_x += 1
-        if self.output_after_each_step:
-            self._test_debug_helper_print_canvas()
-            if self.delay_after_each_step > 0:
-                sleep(self.delay_after_each_step)
 
-    def _test_debug_helper_print_canvas(self):
-        """for debugging: print the current canvas to stdout"""
-        print(' ' + ''.zfill(self.width).replace('0', '#'))
-        for line in self.canvas:
-            print('#' + ''.join(self._transform_for_output(line)) + '#')
-        print(' ' + ''.zfill(self.width).replace('0', '#'))
-        print()
+        self.stdscr.addstr("X")
 
-    def _transform_for_output(self, line):
-        return ["X" if x else " " for x in line]
+        if self.delay_after_each_step > 0:
+            sleep(self.delay_after_each_step)
+        self.stdscr.refresh()
+
+    def delete_pixel(self):
+        y, x = self.stdscr.getyx()
+        self.canvas_x -= 1
+        try:
+            if self.canvas[self.canvas_y][self.canvas_x] == "X":
+                self.canvas[self.canvas_y][self.canvas_x] = " "
+        except IndexError as e:
+            print("IndexError at ({}, {}) of ({}, {}) - increase values of "
+                  "cli.DRY_RUN_WIDTH and cli.DRY_RUN_HEIGHT "
+                  "if you need more space".format(self.canvas_x, self.canvas_y, self.width, self.height))
+            sys.exit(1)
+
+        self.stdscr.move(y, x - 1)
+        self.stdscr.addstr(" ")
+
+        if self.delay_after_each_step > 0:
+            sleep(self.delay_after_each_step)
+        self.stdscr.refresh()
 
     # character-based
 
@@ -239,4 +336,5 @@ class MicrostepBasedErikaMock(AbstractErikaMock):
     def print_ascii(self, text):
         raise Exception('Characters and character steps are not supported in microstep-based tests')
 
-
+    def delete_ascii(self, text):
+        raise Exception('Characters and character steps are not supported in microstep-based tests')

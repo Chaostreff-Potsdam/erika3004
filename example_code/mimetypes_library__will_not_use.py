@@ -29,5 +29,3 @@ file_path = basePath + 'tests/test_resources/ubuntu-logo32.png.renamedwithextens
 mime = mimetypes.guess_type(file_path)
 print(mime)
 print()
-
-
