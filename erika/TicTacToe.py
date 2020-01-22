@@ -58,7 +58,7 @@ class TicTacToe:
     def __exit__(self, *args):
         self.erika.__exit__()
 
-    def start_game(self):
+    def _prepare_game(self):
         # disable keyboard echo
         self.erika.set_keyboard_echo(False)
 
@@ -68,6 +68,9 @@ class TicTacToe:
 
         self.turn = np.random.randint(1, 3)
         self.game_over = False
+
+    def start_game(self):
+        self._prepare_game()
         self.game_loop()
 
     def _print_initial_field(self):
