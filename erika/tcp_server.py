@@ -26,16 +26,24 @@ def print_to_erika(sanitized_tweet):
     erika.crlf()
 
     xpos = 0
-    for i in range(0, len(sanitized_tweet)):
-        erika.print_ascii(sanitized_tweet[i])
+    just_overflow = False
+    for c in sanitized_tweet:
         xpos += 1
 
-        if sanitized_tweet[i] == '\n':
+        if c == '\n':
             xpos = 0
+            if just_overflow:
+                just_overflow = False
+                continue
+
+        just_overflow = False
+        erika.print_ascii(c)
 
         if xpos >= ERIKA_MAX_LINE_LENGTH:
             erika.crlf()
             xpos = 0
+            just_overflow = True
+
 
 
 while True:
