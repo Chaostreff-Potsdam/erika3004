@@ -220,6 +220,12 @@ class CharacterBasedErikaMock(AbstractErikaMock):
             sleep(self.delay_after_each_step)
         self.stdscr.refresh()
 
+    def fast_print(self, text):
+        """just emulates fast printing (doing line splitting + then normal printing)"""
+        for split in text.splitlines():
+            self.print_ascii(split)
+            self.crlf()
+
     def delete_ascii(self, reversed_text):
         text_length = len(reversed_text)
         if text_length == 0:
@@ -335,6 +341,9 @@ class MicrostepBasedErikaMock(AbstractErikaMock):
         raise Exception('Characters and character steps are not supported in microstep-based tests')
 
     def print_ascii(self, text):
+        raise Exception('Characters and character steps are not supported in microstep-based tests')
+
+    def fast_print(self, text):
         raise Exception('Characters and character steps are not supported in microstep-based tests')
 
     def delete_ascii(self, text):
