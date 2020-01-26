@@ -136,6 +136,9 @@ class AbstractErikaMock(AbstractErika):
     def decode(self, value):
         raise Exception('Not supported yet')
 
+    def fast_print(self, text):
+        raise Exception('Not supported yet')
+
 
 # to get exception-safe behavior, make sure __exit__ is always called (by using with-statements)
 class CharacterBasedErikaMock(AbstractErikaMock):
