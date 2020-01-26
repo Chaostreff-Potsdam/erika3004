@@ -173,7 +173,7 @@ class Erika(AbstractErika):
 
     def fast_print(self, text):
         """uses reverse printing mode to print even faster"""
-        lines = text.split("\n")
+        lines = text.splitlines()
         assert len(lines) >= 2, "need at least 2 lines to use fast_printing"
         for line_even, line_odd in zip(lines[::2], lines[1::2]):
             self.print_ascii(line_even.ljust(len(line_odd)))
@@ -186,6 +186,12 @@ class Erika(AbstractErika):
             self._set_reverse_printing_mode(False)
 
             self.move_down()
+
+        if len(lines) % 2 == 1:
+            # print last odd line as well
+            self.print_ascii(lines[-1:])
+            self.crlf()
+
 
     def _set_reverse_printing_mode(self, value):
         if value:
