@@ -121,6 +121,15 @@ class ErikaMockTest(unittest.TestCase):
         my_erika.delete_pixel()
         assert_print_output(self, my_erika, ["XXX X"])
 
+    def test_fast_print(self):
+        my_erika = CharacterBasedErikaMock(width=5, height=4, inside_unit_test=True)
+        lines = "line1\nline2\n\nline4"
+
+        my_erika.fast_print(lines)
+
+        expected_lines = ["line1", "line2", "     ", "line4"]
+        assert_print_output(self, my_erika, expected_lines)
+
 
 def main():
     unittest.main()
