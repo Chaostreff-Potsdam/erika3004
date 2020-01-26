@@ -78,7 +78,7 @@ class ErikaMockTest(unittest.TestCase):
         assert_print_output(self, my_erika, ["X X X", " XXX ", "X X X"])
 
     def test_delete_ascii(self):
-        my_erika = CharacterBasedErikaMock(width=5, height=1, inside_unit_test=True, exception_if_overprinted=False)
+        my_erika = CharacterBasedErikaMock(width=5, height=1, inside_unit_test=True)
         my_erika.print_ascii("Hello")
         assert_print_output(self, my_erika, ["Hello"])
 
@@ -95,7 +95,7 @@ class ErikaMockTest(unittest.TestCase):
         assert_print_output(self, my_erika, ["Help "])
 
     def test_delete_ascii2(self):
-        my_erika = CharacterBasedErikaMock(width=5, height=1, inside_unit_test=True, exception_if_overprinted=False)
+        my_erika = CharacterBasedErikaMock(width=5, height=1, inside_unit_test=True)
         my_erika.print_ascii("Hello")
         assert_print_output(self, my_erika, ["Hello"])
 
@@ -109,7 +109,7 @@ class ErikaMockTest(unittest.TestCase):
         assert_print_output(self, my_erika, ["H x o"])
 
     def test_delete_pixel(self):
-        my_erika = MicrostepBasedErikaMock(width=5, height=1, inside_unit_test=True, exception_if_overprinted=False)
+        my_erika = MicrostepBasedErikaMock(width=5, height=1, inside_unit_test=True)
         my_erika.print_pixel()
         my_erika.print_pixel()
         my_erika.print_pixel()
