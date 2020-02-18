@@ -26,6 +26,7 @@ class Direction(Enum):
     UP = "76"
     DOWN = "75"
 
+special_chars = ["€", "@"]
 
 class Margin(Enum):
     LEFT = "7E"
@@ -216,14 +217,34 @@ class Erika(AbstractErika):
         """
         key_id = self.connection.read()
         return self.ddr_ascii.try_decode(key_id.hex().upper())
+    
+    def _overprint_byte(self, c):
+        self._write_byte("A9")
+        self._write_byte(c)
+    
+    def overprint_ascii(self, text):
+        for c in text[-1]:
+            key_id = self.ddr_ascii.encode(c)
+            self._overprint_char(key_id)
+        self.print_ascii(text[-1])    
+        
+    
+    def _print_special_chars(self, c):
+        if c == "€":
+            self.overprint_ascii("C=")
+        elif c == "@":
+            self.overprint_ascii("Qa")
 
     def print_ascii(self, text, esc_sequences=False):
         """Print given string on the Erika typewriter."""
         if esc_sequences:
             self.decode(text)
         for c in text:
-            key_id = self.ddr_ascii.encode(c)
-            self._write_byte(key_id)
+            if c in special_chars:
+                self._print_special_chars(c)
+            else:
+                key_id = self.ddr_ascii.encode(c)
+                self._write_byte(key_id)
 
     def _fast_print(self, text):
         """uses reverse printing mode to print even faster"""
