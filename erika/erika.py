@@ -65,8 +65,15 @@ class Autorepeat(Enum):
     OFF = "9C"
 
 
-class AbstractErika():
+class Baudrate(Enum):
+    BD_1200 = "10"
+    BD_2400 = "08"
+    BD_4800 = "04"
+    BD_9600 = "02"
+    BD_19200 = "01"
 
+
+class AbstractErika:
     # verify that all "public" methods are part of this "interface" class
     def __new__(cls, *args, **kwargs):
         not_found_methods = set()
@@ -187,18 +194,28 @@ class Erika(AbstractErika):
 
     def __init__(self, com_port, rts_cts=True, *args, **kwargs):
         """Set comport to serial device that connects to Erika typewriter."""
-        self.com_port = com_port
-        self.connection = serial.Serial(com_port, ERIKA_BAUDRATE, rtscts=rts_cts)
+        self.connection = serial.Serial()
+        self.connection.port = com_port
+        self.connection.baudrate = ERIKA_BAUDRATE
+        self.connection.rtscts = rts_cts
+
         self.ddr_ascii = DDR_ASCII()
         self.use_rts_cts = rts_cts
 
     ## resource manager stuff
 
+    def open(self):
+        self.connection.open()
+
+    def close(self):
+        self.connection.close()
+
     def __enter__(self):
+        self.open()
         return self
 
     def __exit__(self, *args):
-        self.connection.close()
+        self.close()
 
     ##########################
 
