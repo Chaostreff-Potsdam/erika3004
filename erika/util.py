@@ -50,3 +50,7 @@ def remove_trailing_newlines(lines):
 
 def _remove_trailing_newline(line):
     return line.replace('\n', "").replace('\r', "")
+
+
+def number2hex(value):
+    return hex(value)[2:].upper()
