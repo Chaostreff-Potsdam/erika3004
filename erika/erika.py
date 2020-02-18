@@ -226,9 +226,9 @@ class Erika(AbstractErika):
         """Sound alarm for given duration [s]"""
         assert duration <= 5.1, "duration must be less than or equal to 5.1 seconds"
         duration /= 0.02
-        duration_hex = hex(round(duration))
+        duration_hex = number2hex(round(duration))
         self._write_byte("AA")
-        self._write_byte(duration_hex[1:])
+        self._write_byte(duration_hex)
         # self.connection.write(b"\xaa\xff")
 
     def read(self):
