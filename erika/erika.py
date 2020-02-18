@@ -27,7 +27,44 @@ class Direction(Enum):
     DOWN = "75"
 
 
-class AbstractErika(EscapeSequenceDecoder):
+class Margin(Enum):
+    LEFT = "7E"
+    RIGHT = "7F"
+    RESET = "80"
+    DISABLE = "8F"
+    ENABLE = "90"
+
+
+class LineSpacing(Enum):
+    ONE = "84"
+    ONEHALF = "85"
+    DOUBLE = "86"
+
+
+class CharacterSpacing(Enum):
+    TEN = "87"
+    TWELVE = "88"
+    FIFTEEN = "89"
+
+
+class Tabulator(Enum):
+    SET = "7A"
+    DELETE = "7B"
+    DELETE_ALL = "7C"
+    RESET_2_DEFAULT = "7D"
+
+
+class KeyboardCodes(Enum):
+    DEFAULT = "97"
+    RAW_MATRIX = "98"
+
+
+class Autorepeat(Enum):
+    ON = "9B"
+    OFF = "9C"
+
+
+class AbstractErika():
 
     # verify that all "public" methods are part of this "interface" class
     def __new__(cls, *args, **kwargs):
@@ -121,6 +158,27 @@ class AbstractErika(EscapeSequenceDecoder):
 
     @enforcedmethod
     def delete_ascii(self, reversed_text):
+        pass
+
+    def set_margin(self, margin_side):
+        pass
+    
+    def set_spacing(self, line_spacing):
+        pass
+
+    def set_character_spacing(self, character_spacing):
+        pass
+
+    def reset(self):
+        pass
+
+    def set_tabs(self, tabulator):
+        pass
+
+    def set_keyboard_code(self, code):
+        pass
+
+    def enable_autorepeat(self, value):
         pass
 
 
@@ -406,3 +464,27 @@ class Erika(AbstractErika):
 
     def wait_for_user_if_simulated(self):
         pass
+
+    def set_margin(self, margin_side):
+        self._write_byte(margin_side.value)
+
+    def set_line_spacing(self, line_spacing):
+        self._write_byte(line_spacing.value)
+
+    def set_character_spacing(self, character_spacing):
+        self._write_byte(character_spacing.value)
+
+    def reset(self):
+        self._write_byte("95")
+
+    def set_tabs(self, tabulator):
+        self._write_byte(tabulator.value)
+
+    def set_keyboard_code(self, code):
+        self._write_byte(code.value)
+
+    def enable_autorepeat(self, value):
+        if value:
+            self._write_byte(Autorepeat.ON)
+        else:
+            self._write_byte(Autorepeat.OFF)
