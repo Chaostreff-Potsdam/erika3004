@@ -4,7 +4,7 @@ from enum import Enum
 import serial
 
 from erika.erica_encoder_decoder import DDR_ASCII
-from erika.util import twos_complement_hex_string, reverse_string
+from erika.util import twos_complement_hex_string, reverse_string, number2hex
 from erika_fs.ansii_decoder import *
 
 ERIKA_BAUDRATE = 1200
@@ -187,6 +187,9 @@ class AbstractErika:
         pass
 
     def enable_autorepeat(self, value):
+        pass
+
+    def set_baudrate(self, baudrate):
         pass
 
 
@@ -526,3 +529,26 @@ class Erika(AbstractErika):
             self._write_byte(Autorepeat.ON)
         else:
             self._write_byte(Autorepeat.OFF)
+
+    def set_baudrate(self, baudrate):
+        assert isinstance(baudrate, Baudrate), "Expected instance of type Baudrate"
+        self._write_byte("A1")
+        self._write_byte(baudrate.value)
+
+    def set_velocity(self, velocity):
+        assert 0 <= velocity <= 255, f"Velocity must be in range (0, 255) (inclusive), but was: {velocity}"
+        self._write_byte("A3")
+        self._write_byte(number2hex(velocity))
+
+    def turn_typewheel(self, steps):
+        assert 0 <= velocity <= 255, f"Steps must be in range (0, 255) (inclusive), but was: {velocity}"
+        self._write_byte("A7")
+        self._write_byte(number2hex(steps))
+
+    def advance_ribbon(self, steps):
+        assert 0 <= velocity <= 255, f"Steps must be in range (0, 255) (inclusive), but was: {velocity}"
+        self._write_byte("A8")
+        self._write_byte(number2hex(steps))
+    
+    def paper_feed(self):
+        self._write_byte("83")
