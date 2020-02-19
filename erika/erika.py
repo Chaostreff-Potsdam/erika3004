@@ -73,127 +73,127 @@ class Baudrate(Enum):
     BD_19200 = "01"
 
 
-class AbstractErika:
-    # verify that all "public" methods are part of this "interface" class
-    def __new__(cls, *args, **kwargs):
-        not_found_methods = set()
+# class AbstractErika:
+#     # verify that all "public" methods are part of this "interface" class
+#     def __new__(cls, *args, **kwargs):
+#         not_found_methods = set()
+#
+#         # search through method resolution order
+#         method_resolution_order = cls.__mro__
+#         for base_class in method_resolution_order:
+#             for name, value in base_class.__dict__.items():
+#                 if not name.startswith("_") and name not in AbstractErika.__dict__:
+#                     not_found_methods.add(name)
+#         if not_found_methods:
+#             raise TypeError("Can't instantiate abstract class {}. All public methods (not starting with underscore) "
+#                             "must be part of the AbstractErika base class: {}"
+#                             .format(cls.__name__, ', \n'.join(not_found_methods)))
+#         else:
+#             return super(AbstractErika, cls).__new__(cls)
+#
+#     @enforcedmethod
+#     def alarm(self, duration):
+#         pass
+#
+#     @enforcedmethod
+#     def read(self):
+#         pass
+#
+#     @enforcedmethod
+#     def print_ascii(self, text):
+#         pass
+#
+#     @enforcedmethod
+#     def move_up(self):
+#         pass
+#
+#     @enforcedmethod
+#     def move_down(self):
+#         pass
+#
+#     @enforcedmethod
+#     def move_left(self):
+#         pass
+#
+#     @enforcedmethod
+#     def move_right(self):
+#         pass
+#
+#     @enforcedmethod
+#     def move_down_microstep(self):
+#         pass
+#
+#     @enforcedmethod
+#     def move_up_microstep(self):
+#         pass
+#
+#     @enforcedmethod
+#     def move_right_microsteps(self, num_steps=1):
+#         pass
+#
+#     @enforcedmethod
+#     def move_left_microsteps(self, num_steps=1):
+#         pass
+#
+#     @enforcedmethod
+#     def crlf(self):
+#         pass
+#
+#     @enforcedmethod
+#     def set_keyboard_echo(self, value):
+#         pass
+#
+#     @enforcedmethod
+#     def demo(self):
+#         pass
+#
+#     @enforcedmethod
+#     def print_pixel(self):
+#         pass
+#
+#     # TODO discuss if we need this everywhere
+#     # @enforcedmethod
+#     def decode(self, string):
+#         pass
+#
+#     @enforcedmethod
+#     def wait_for_user_if_simulated(self):
+#         pass
+#
+#     @enforcedmethod
+#     def delete_pixel(self):
+#         pass
+#
+#     @enforcedmethod
+#     def delete_ascii(self, reversed_text):
+#         pass
+#
+#     def set_margin(self, margin_side):
+#         pass
+#
+#     def set_spacing(self, line_spacing):
+#         pass
+#
+#     def set_character_spacing(self, character_spacing):
+#         pass
+#
+#     def reset(self):
+#         pass
+#
+#     def set_tabs(self, tabulator):
+#         pass
+#
+#     def set_keyboard_code(self, code):
+#         pass
+#
+#     def enable_autorepeat(self, value):
+#         pass
+#
+#     def set_baudrate(self, baudrate):
+#         pass
 
-        # search through method resolution order
-        method_resolution_order = cls.__mro__
-        for base_class in method_resolution_order:
-            for name, value in base_class.__dict__.items():
-                if not name.startswith("_") and name not in AbstractErika.__dict__:
-                    not_found_methods.add(name)
-        if not_found_methods:
-            raise TypeError("Can't instantiate abstract class {}. All public methods (not starting with underscore) "
-                            "must be part of the AbstractErika base class: {}"
-                            .format(cls.__name__, ', \n'.join(not_found_methods)))
-        else:
-            return super(AbstractErika, cls).__new__(cls)
 
-    @enforcedmethod
-    def alarm(self, duration):
-        pass
-
-    @enforcedmethod
-    def read(self):
-        pass
-
-    @enforcedmethod
-    def print_ascii(self, text):
-        pass
-
-    @enforcedmethod
-    def move_up(self):
-        pass
-
-    @enforcedmethod
-    def move_down(self):
-        pass
-
-    @enforcedmethod
-    def move_left(self):
-        pass
-
-    @enforcedmethod
-    def move_right(self):
-        pass
-
-    @enforcedmethod
-    def move_down_microstep(self):
-        pass
-
-    @enforcedmethod
-    def move_up_microstep(self):
-        pass
-
-    @enforcedmethod
-    def move_right_microsteps(self, num_steps=1):
-        pass
-
-    @enforcedmethod
-    def move_left_microsteps(self, num_steps=1):
-        pass
-
-    @enforcedmethod
-    def crlf(self):
-        pass
-
-    @enforcedmethod
-    def set_keyboard_echo(self, value):
-        pass
-
-    @enforcedmethod
-    def demo(self):
-        pass
-
-    @enforcedmethod
-    def print_pixel(self):
-        pass
-
-    # TODO discuss if we need this everywhere
-    # @enforcedmethod
-    def decode(self, string):
-        pass
-
-    @enforcedmethod
-    def wait_for_user_if_simulated(self):
-        pass
-
-    @enforcedmethod
-    def delete_pixel(self):
-        pass
-
-    @enforcedmethod
-    def delete_ascii(self, reversed_text):
-        pass
-
-    def set_margin(self, margin_side):
-        pass
-    
-    def set_spacing(self, line_spacing):
-        pass
-
-    def set_character_spacing(self, character_spacing):
-        pass
-
-    def reset(self):
-        pass
-
-    def set_tabs(self, tabulator):
-        pass
-
-    def set_keyboard_code(self, code):
-        pass
-
-    def enable_autorepeat(self, value):
-        pass
-
-    def set_baudrate(self, baudrate):
-        pass
-
-
-class Erika(AbstractErika):
+class Erika:
 
     def __init__(self, com_port, rts_cts=True, *args, **kwargs):
         """Set comport to serial device that connects to Erika typewriter."""
