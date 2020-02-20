@@ -66,6 +66,9 @@ class Autorepeat(Enum):
     ON = "9B"
     OFF = "9C"
 
+class LineEndings(Enum):
+    UNIX = "77"
+    WINDOWS = "9F"
 
 class Baudrate(Enum):
     BD_1200 = "10"
@@ -218,6 +221,7 @@ class Erika:
 
         self.ddr_ascii = DDR_ASCII()
         self.use_rts_cts = rts_cts
+        self.line_ending = LineEndings.UNIX
 
     ## resource manager stuff
 
@@ -275,6 +279,8 @@ class Erika:
         for c in text:
             if c in special_chars:
                 self._print_special_chars(c)
+            elif c == "\n":
+                self._write_byte(self.line_ending.value)
             else:
                 key_id = self.ddr_ascii.encode(c)
                 self._write_byte(key_id)
