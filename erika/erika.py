@@ -74,7 +74,7 @@ class Baudrate(Enum):
     BD_9600 = "02"
     BD_19200 = "01"
 
-    _baudrates = {
+    baudrates = {
         BD_1200: 1200
         , BD_2400: 2400
         , BD_4800: 4800
@@ -84,7 +84,7 @@ class Baudrate(Enum):
 
     @property
     def baud(self):
-        return self._baudrates.value[self]
+        return self.baudrates.value[self.value]
 
 
 # class AbstractErika:
