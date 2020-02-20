@@ -26,7 +26,9 @@ class Direction(Enum):
     UP = "76"
     DOWN = "75"
 
+
 special_chars = ["€", "@"]
+
 
 class Margin(Enum):
     LEFT = "7E"
@@ -52,7 +54,7 @@ class Tabulator(Enum):
     SET = "7A"
     DELETE = "7B"
     DELETE_ALL = "7C"
-    RESET_2_DEFAULT = "7D"
+    RESET_2_DEFAULT = "7D"  ## ?
 
 
 class KeyboardCodes(Enum):
@@ -71,6 +73,18 @@ class Baudrate(Enum):
     BD_4800 = "04"
     BD_9600 = "02"
     BD_19200 = "01"
+
+    _baudrates = {
+        BD_1200: 1200
+        , BD_2400: 2400
+        , BD_4800: 4800
+        , BD_9600: 9600
+        , BD_19200: 19200
+    }
+
+    @property
+    def baud(self):
+        return self._baudrates.value[self]
 
 
 # class AbstractErika:
@@ -237,18 +251,17 @@ class Erika:
         """
         key_id = self.connection.read()
         return self.ddr_ascii.try_decode(key_id.hex().upper())
-    
+
     def _overprint_byte(self, c):
         self._write_byte("A9")
         self._write_byte(c)
-    
+
     def overprint_ascii(self, text):
         for c in text[-1]:
             key_id = self.ddr_ascii.encode(c)
             self._overprint_char(key_id)
-        self.print_ascii(text[-1])    
-        
-    
+        self.print_ascii(text[-1])
+
     def _print_special_chars(self, c):
         if c == "€":
             self.overprint_ascii("C=")
@@ -283,6 +296,8 @@ class Erika:
             self.move_down()
 
     def _set_reverse_printing_mode(self, value):
+        """In reverse printing mode: move left, then print
+            In normal printing mode: print, then move right"""
         if value:
             self._write_byte("8E")
         else:
@@ -526,14 +541,15 @@ class Erika:
 
     def enable_autorepeat(self, value):
         if value:
-            self._write_byte(Autorepeat.ON)
+            self._write_byte(Autorepeat.ON.value)
         else:
-            self._write_byte(Autorepeat.OFF)
+            self._write_byte(Autorepeat.OFF.value)
 
     def set_baudrate(self, baudrate):
         assert isinstance(baudrate, Baudrate), "Expected instance of type Baudrate"
         self._write_byte("A1")
         self._write_byte(baudrate.value)
+        self.connection.baudrate = baudrate.baud
 
     def set_velocity(self, velocity):
         assert 0 <= velocity <= 255, f"Velocity must be in range (0, 255) (inclusive), but was: {velocity}"
@@ -541,14 +557,17 @@ class Erika:
         self._write_byte(number2hex(velocity))
 
     def turn_typewheel(self, steps):
-        assert 0 <= velocity <= 255, f"Steps must be in range (0, 255) (inclusive), but was: {velocity}"
+        assert 0 <= steps <= 255, f"Steps must be in range (0, 255) (inclusive), but was: {steps}"
         self._write_byte("A7")
         self._write_byte(number2hex(steps))
 
     def advance_ribbon(self, steps):
-        assert 0 <= velocity <= 255, f"Steps must be in range (0, 255) (inclusive), but was: {velocity}"
+        assert 0 <= steps <= 255, f"Steps must be in range (0, 255) (inclusive), but was: {steps}"
         self._write_byte("A8")
         self._write_byte(number2hex(steps))
-    
+
     def paper_feed(self):
         self._write_byte("83")
+
+    def disable_autorepeat_delay(self):
+        self._write_byte("A0")
