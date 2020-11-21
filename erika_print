@@ -1,0 +1,11 @@
+#! /usr/bin/python3
+from erika.erika import Erika
+from sys import stdin
+import time
+e = Erika("/dev/ttyAMA0")
+with e:
+	for line in stdin:
+		e.print_string(line)
+		e.connection.flush()
+		time.sleep(1)
+
