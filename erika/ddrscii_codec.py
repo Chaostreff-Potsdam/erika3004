@@ -133,7 +133,6 @@ def decode(binary: bytes, error: str = "strict") -> Tuple[str, int]:
     return "".join(erika2ascii[x] for x in binary), len(binary)
 
 
-
 def search_function(encoding_name):
     return codecs.CodecInfo(encode, decode, name='DDRSCII')
 
