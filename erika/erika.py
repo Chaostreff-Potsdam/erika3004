@@ -88,7 +88,7 @@ class Erika:
     DEFAULT_BAUDRATE = 1200
     DEFAULT_DELAY = 0.0
 
-    def __init__(self, com_port, rts_cts=True, baudrate=None  *args, **kwargs):
+    def __init__(self, com_port, rts_cts=True, baudrate=None,  *args, **kwargs):
         """Set comport to serial device that connects to Erika typewriter."""
         self.connection = serial.Serial()
         self.connection.port = com_port
