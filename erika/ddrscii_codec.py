@@ -120,12 +120,18 @@ def transpose_dict(dictionary):
 erika2ascii = transpose_dict(ascii2erika)
 
 
-def encode(text: str) -> Tuple[bytes, int]:
-    return b"".join(ascii2erika[x] for x in text), len(text)
+def encode(text: str, error: str = "strict") -> Tuple[bytes, int]:
+    if error == "strict":
+        return b"".join(ascii2erika[x] for x in text), len(text)
+    elif error == "ignore":
+        return b"".join(ascii2erika.get(x, ascii2erika[" "]) for x in text), len(text)
+    else:
+        raise Exception("invalid error handler")
 
 
-def decode(binary: bytes) -> Tuple[str, int]:
+def decode(binary: bytes, error: str = "strict") -> Tuple[str, int]:
     return "".join(erika2ascii[x] for x in binary), len(binary)
+
 
 
 def search_function(encoding_name):
