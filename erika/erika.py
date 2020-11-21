@@ -95,7 +95,7 @@ class Erika:
         """Set comport to serial device that connects to Erika typewriter."""
         if baudrate is None:
             baudrate = Erika.DEFAULT_BAUDRATE
-        self.connection = serial.Serial(port=serial_port, rts_cts=rts_cts, baudrate=baudrate)
+        self.connection = serial.Serial(port=serial_port, rtscts=rts_cts, baudrate=baudrate)
 
         self.ddr_ascii = DDR_ASCII()
         self.use_rts_cts = rts_cts
