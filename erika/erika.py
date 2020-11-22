@@ -1,6 +1,7 @@
 from typing import Optional
 
 import serial
+import time
 import erika.ddrscii_codec
 
 
@@ -22,6 +23,8 @@ class Erika:
         self.connection.open()
 
     def close(self):
+        self.connection.flush()
+        time.sleep(2)
         self.connection.close()
 
     def __enter__(self):
