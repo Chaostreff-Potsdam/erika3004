@@ -138,12 +138,12 @@ erika2ascii = transpose_dict(ascii2erika)
 
 
 def get_composed_char(char: str):
-    char, combining_char = unicodedata.normalize("NFD", char)
-    return ascii2erika[char] + combining_diacritics[combining_char]
+    char, *combining_chars = unicodedata.normalize("NFD", char)
+    return ascii2erika[char] + b"".join(combining_diacritics[c] for c in combining_chars)
 
 
 def is_composed_char(char: str):
-    return len(unicodedata.normalize("NFD", char)) == 2
+    return len(unicodedata.normalize("NFD", char)) > 1
 
 
 def encode_char(char: str):
