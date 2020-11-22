@@ -143,11 +143,13 @@ def get_composed_char(char: str):
 
 
 def is_composed_char(char: str):
+    print(char)
     return len(unicodedata.normalize("NFD", char)) > 1
 
 
 def encode_char(char: str):
-    if is_composed_char(char):
+    # erika directly supports some composed chars
+    if is_composed_char(char) and char not in ascii2erika.keys():
         return get_composed_char(char)
     else:
         return ascii2erika[char]
