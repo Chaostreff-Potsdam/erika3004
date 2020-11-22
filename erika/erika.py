@@ -47,4 +47,4 @@ class Erika:
 
     def print_string(self, text: str) -> Optional[int]:
         """Print given string on the Erika typewriter."""
-        return self._write_bytes(text.encode("DDRSCII", "ignore"))
+        return self._write_bytes(text.encode("DDRSCII"))
