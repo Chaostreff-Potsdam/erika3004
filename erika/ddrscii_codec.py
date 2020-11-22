@@ -151,8 +151,6 @@ def encode_char(char: str):
     if is_composed_char(char) and char not in ascii2erika.keys():
         return get_composed_char(char)
     else:
-        if is_composed_char(char):
-            print(char)
         return ascii2erika[char]
 
 
