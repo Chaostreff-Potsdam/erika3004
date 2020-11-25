@@ -2,12 +2,15 @@ import codecs
 from typing import Tuple
 import unicodedata
 
+
 ascii2erika = {
+    # control chars
     "\b": b"\x72",
     "\t": b"\x79",
     "\n": b"\x77",
     "\r": b"\x78",
 
+    # punctuation
     " ": b"\x71",
     "!": b"\x42",
     '"': b"\x43",
@@ -25,6 +28,7 @@ ascii2erika = {
     ".": b"\x63",
     "/": b"\x40",
 
+    # digits
     "0": b"\x0D",
     "1": b"\x11",
     "2": b"\x10",
@@ -36,11 +40,13 @@ ascii2erika = {
     "8": b"\x09",
     "9": b"\x08",
 
+    # more punctuation
     ":": b"\x13",
     ";": b"\x3B",
     "=": b"\x2E",
     "?": b"\x35",
 
+    # upper case letters
     "A": b"\x30",
     "B": b"\x18",
     "C": b"\x20",
@@ -68,10 +74,12 @@ ascii2erika = {
     "Y": b"\x31",
     "Z": b"\x38",
 
+    # punctuation
     "^": b"\x19\x71",
     "_": b"\x01",
     "`": b"\x2B\x71",
 
+    # lower case letters
     "a": b"\x61",
     "b": b"\x4E",
     "c": b"\x57",
@@ -99,7 +107,7 @@ ascii2erika = {
     "y": b"\x51",
     "z": b"\x54",
 
-
+    # special chars
     "|": b"\x27",
     "£": b"\x06",
     "§": b"\x3D",
@@ -108,6 +116,7 @@ ascii2erika = {
     "²": b"\x15",
     "³": b"\x23",
 
+    # umlauts, accents
     "Ä": b"\x3F",
     "Ö": b"\x3C",
     "Ü": b"\x3A",
@@ -120,8 +129,13 @@ ascii2erika = {
     "ü": b"\x67",
     "´": b"\x29\x71",
     "μ": b"\x07",
+
+    # combined chars
+    "€": b"\x20\x72\x2E",
 }
-combining_diacritics={
+
+
+combining_diacritics = {
     "\u0300": b"\x2B",
     '\u0301': b"\x29",
     "\u0302": b"\x19",
@@ -132,6 +146,21 @@ combining_diacritics={
 
 def transpose_dict(dictionary):
     return {value: key for key, value in dictionary.items()}
+
+
+def iter_good(data):
+    index = 0
+    peek_index = index + 1
+    while index < len(data) and peek_index < len(data):
+        peek_index = index + 1
+        while peek_index < len(data):
+            if not unicodedata.combining(data[peek_index]):
+                yield data[index:peek_index]
+                index = peek_index
+                break
+            else:
+                peek_index += 1
+    yield data[index:]
 
 
 erika2ascii = transpose_dict(ascii2erika)
@@ -158,9 +187,9 @@ def encode(text: str, error: str = "strict") -> Tuple[bytes, int]:
     text = unicodedata.normalize("NFC", text)
 
     if error == "strict":
-        return b"".join(encode_char(x) for x in text), len(text)
+        return b"".join(encode_char(x) for x in iter_good(text)), len(text)
     elif error == "ignore":
-        return b"".join(ascii2erika.get(x, ascii2erika[" "]) for x in text), len(text)
+        return b"".join(ascii2erika.get(x, ascii2erika[" "]) for x in iter_good(text)), len(text)
     else:
         raise Exception("invalid error handler")
 
