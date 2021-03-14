@@ -35,3 +35,13 @@ You can install this package as a dependency for your app using pip:
 ```
 pip3 install git+https://github.com/Chaostreff-Potsdam/erika3004.git
 ```
+
+# Documentation
+
+For documentation, check the wiki of this projekt:
+https://github.com/Chaostreff-Potsdam/erika3004/wiki
+
+Additional documentation of the Hardware can be found in:
+https://github.com/Chaostreff-Potsdam/erika-docs
+
+
