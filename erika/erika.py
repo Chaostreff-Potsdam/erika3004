@@ -119,5 +119,5 @@ class JustifiedErika(Erika):
             for word in words:
                 self.print_string(word)
                 self.move_right(chars=floor(space_width))
-                micro_steps = round((space_width - floor(space_width)) * 10)
+                micro_steps = round((space_width - floor(space_width)) * 12)
                 self.move_right_microsteps(num_steps=micro_steps)
