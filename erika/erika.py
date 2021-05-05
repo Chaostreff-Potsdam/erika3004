@@ -1,9 +1,15 @@
+import struct
 from typing import Optional
 
 import serial
 import time
 import erika.ddrscii_codec
-from erika.char_map import Direction, LINE_FEED
+from erika.char_map import Direction, LINE_FEED, MicroStep
+from math import floor
+
+
+def signed_byte(value):
+    return struct.pack("b", value)
 
 
 class Erika:
@@ -78,31 +84,41 @@ class Erika:
     def move_down(self, chars=1):
         for _ in range(chars):
             self._write_bytes(LINE_FEED)
-            # self._move_down_hs()
-            # self._move_down_hs()
 
-    def move_down_microstep(self):
-        self._write_byte("81")
+    def move_down_microstep(self, num_steps=1):
+        for _ in range(num_steps):
+            self._write_bytes(MicroStep.DOWN)
 
-    def move_up_microstep(self):
-        self._write_byte("82")
+    def move_up_microstep(self, num_steps=1):
+        for _ in range(num_steps):
+            self._write_bytes(MicroStep.UP)
 
     def move_right_microsteps(self, num_steps=1):
-        while num_steps > 127:
-            self._write_byte("A5")
-            self._write_byte(twos_complement_hex_string(127))
-            num_steps = num_steps - 127
-
-        self._write_byte("A5")
-        self._write_byte(twos_complement_hex_string(num_steps))
+        assert 0 <= num_steps <= 127, "num_steps must be in [0, 127]"
+        self._write_bytes(MicroStep.LEFT_RIGHT + signed_byte(num_steps))
 
     def move_left_microsteps(self, num_steps=1):
         # two's complement numbers: negative value range is 1 bigger than positive (because 0 positive)
-        while num_steps > 128:
-            self._write_byte("A5")
-            self._write_byte(twos_complement_hex_string(-128))
-            num_steps = num_steps - 128
+        assert 0 <= num_steps <= 128, "num_steps must be in [0, 128]"
+        self._write_bytes(MicroStep.LEFT_RIGHT + signed_byte(-num_steps))
 
-        self._write_byte("A5")
-        self._write_byte(twos_complement_hex_string(-1 * num_steps))
 
+class JustifiedErika(Erika):
+
+    def print_stretched_line(self, text: str, stretch_factor: float):
+        words = text.split(" ")
+
+        if len(words) < 2:
+            self.print_string(text)
+            return
+        else:
+            target_line_width = len(text) * stretch_factor
+            spaces = len(words) - 1
+            total_space_width = target_line_width - len(text) + spaces
+            space_width = total_space_width / spaces
+
+            for word in words:
+                self.print_string(word)
+                self.move_right(chars=floor(space_width))
+                micro_steps = round((space_width - floor(space_width)) * 10)
+                self.move_right_microsteps(num_steps=micro_steps)

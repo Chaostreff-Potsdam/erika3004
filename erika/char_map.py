@@ -131,6 +131,14 @@ ascii2erika = {
     "€": b"\x20\x72\x2E",
 }
 
+combined_chars = [
+    "^",
+    "`",
+    "¨",
+    "´",
+    "€"
+]
+
 combining_diacritics = {
     "\u0300": b"\x2B",
     '\u0301': b"\x29",
@@ -146,4 +154,12 @@ class Direction:
     UP = b"\x76"
     DOWN = b"\x75"
 
+
 LINE_FEED = b"\x9F"
+
+
+class MicroStep:
+    LEFT_RIGHT = b"\xA5"
+    UP = b"\x82"
+    DOWN = b"\x81"
+

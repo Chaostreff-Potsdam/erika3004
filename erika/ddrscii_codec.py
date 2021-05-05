@@ -1,4 +1,5 @@
 import codecs
+import sys
 from typing import Tuple
 import unicodedata
 
@@ -6,7 +7,7 @@ from erika.char_map import ascii2erika, combining_diacritics
 
 
 def transpose_dict(dictionary):
-    return {value: key for key, value in dictionary.items()}
+    return {int.from_bytes(value, sys.byteorder): key for key, value in dictionary.items()}
 
 
 def iter_good(data):
