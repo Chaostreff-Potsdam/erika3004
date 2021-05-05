@@ -13,5 +13,6 @@ und nicht zwei Matratzen auf dem Boden liegen. :|""".replace("  ", " ").replace(
 with e:
     for line in par.split("\n"):
         e.print_stretched_line(line, 60)
+        e.print_string("\n")
         e.connection.flush()
         time.sleep(1)
