@@ -105,14 +105,13 @@ class Erika:
 
 class JustifiedErika(Erika):
 
-    def print_stretched_line(self, text: str, stretch_factor: float):
+    def print_stretched_line(self, text: str, target_line_width: float):
         words = text.split(" ")
 
         if len(words) < 2:
             self.print_string(text)
             return
         else:
-            target_line_width = len(text) * stretch_factor
             spaces = len(words) - 1
             total_space_width = target_line_width - len(text) + spaces
             space_width = total_space_width / spaces
