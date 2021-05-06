@@ -1,4 +1,5 @@
 import struct
+from random import shuffle
 from typing import Optional
 
 import serial
@@ -23,6 +24,7 @@ class Erika:
             baud_rate = Erika.DEFAULT_BAUD_RATE
         self.connection.baudrate = baud_rate
         self.connection.rtscts = rts_cts
+        self.steps_per_char = 12
 
     # resource manager stuff #
 
@@ -103,6 +105,11 @@ class Erika:
         self._write_bytes(MicroStep.LEFT_RIGHT + signed_byte(-num_steps))
 
 
+def distribute(a, b):
+    base, extra = divmod(a, b)
+    return [base + (i < extra) for i in range(b)]
+
+
 class JustifiedErika(Erika):
 
     def print_stretched_line(self, text: str, target_line_width: float):
@@ -112,12 +119,17 @@ class JustifiedErika(Erika):
             self.print_string(text)
             return
         else:
+
             spaces = len(words) - 1
             total_space_width = target_line_width - len(text) + spaces
-            space_width = total_space_width / spaces
+            total_space_steps = total_space_width * self.steps_per_char
+            space_positions = distribute(total_space_steps, spaces)
+            shuffle(space_positions)
 
-            for word in words:
+            for word, space in zip(words[:-1], space_positions):
                 self.print_string(word)
-                self.move_right(chars=floor(space_width))
-                micro_steps = round((space_width - floor(space_width)) * 12)
+                chars, micro_steps = divmod(space, self.steps_per_char)
+                self.move_right(chars=chars)
                 self.move_right_microsteps(num_steps=micro_steps)
+                # micro_steps = round((space_width - floor(space_width)) * self.steps_per_char)
+            self.print_string(words[-1])
