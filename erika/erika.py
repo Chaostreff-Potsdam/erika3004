@@ -45,6 +45,9 @@ class Erika:
 
     ##########################
 
+    # Basic IO #
+    ############
+
     def _read_bytes(self, size: int = 1) -> bytes:
         return self.connection.read(size=size)
 
@@ -58,6 +61,9 @@ class Erika:
         """Print given string on the Erika typewriter."""
         return self._write_bytes(text.encode("DDRSCII"))
 
+    # Movement #
+    ############
+
     def _move_left_hs(self):
         self._write_bytes(Direction.LEFT)
 
@@ -70,20 +76,20 @@ class Erika:
     def _move_down_hs(self):
         self._write_bytes(Direction.DOWN)
 
-    def move_left(self, chars=1):
+    def move_left(self, chars: int = 1):
         for _ in range(chars):
             self.print_string("\b")
 
-    def move_right(self, chars=1):
+    def move_right(self, chars: int = 1):
         for _ in range(chars):
             self.print_string(" ")
 
-    def move_up(self, chars=1):
+    def move_up(self, chars: int = 1):
         for _ in range(chars):
             self._move_up_hs()
             self._move_up_hs()
 
-    def move_down(self, chars=1):
+    def move_down(self, chars: int = 1):
         for _ in range(chars):
             self._write_bytes(LINE_FEED)
 

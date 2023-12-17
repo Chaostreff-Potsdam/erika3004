@@ -155,6 +155,7 @@ class Direction:
     DOWN = b"\x75"
 
 
+
 LINE_FEED = b"\x9F"
 
 

@@ -5,10 +5,10 @@ import time
 
 e = JustifiedErika("/dev/ttyAMA0")
 
-par = """Heute war der Future SOC Lab Day am HPI |1|. Leider habe ich
-den Anfang ab 9:15 Uhr verschlafen, ich dachte, es ginge wie
-auf,  dass  ich  am 11 Uhr Meeting teilnehmen kann, aber das
-und nicht zwei Matratzen auf dem Boden liegen. :|""".replace("  ", " ").replace("  ", " ")
+par = """Lorem ipsum dolor sit amet, consectetur adipiscing elit,
+sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris
+ut aliquip ex ea commodo consequat.""".replace("  ", " ").replace("  ", " ")
 
 with e:
     for line in par.split("\n"):
